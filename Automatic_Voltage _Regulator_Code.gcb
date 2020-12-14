@@ -1,0 +1,167 @@
+
+; ----- Configuration
+  #chip 16F876A,8
+
+'Use LCD in 4 pin mode and define LCD pins
+    #define LCD_IO 4
+    #define LCD_NO_RW
+    #define LCD_RS PORTB.1
+    #define LCD_Enable PORTB.2
+    #define LCD_DB4 PORTB.3
+    #define LCD_DB5 PORTB.4
+    #define LCD_DB6 PORTB.5
+    #define LCD_DB7 PORTB.6
+
+
+
+; ----- Define Hardware settings
+  dir AN0 in
+  dir AN1 in
+  dir AN2 in
+  dir PORTB.0 out
+  dir PORTC out
+
+  #define NEPA AN0
+  #define LOAD AN1
+  #define AC_OUT AN2
+  #define NEPA_MAX 260
+  #define NEPA_MIN 140
+  #define RL_A PORTC.0
+  #define RL_B PORTC.1
+  #define RL_C PORTC.2
+  #define RL_D PORTC.3
+  #define RL_E PORTC.4
+  #define RL_F PORTC.5
+  #define soundout PORTB.0
+
+; ----- Main body of program commences here.
+  Start:
+
+  set RL_A OFF
+  set RL_B OFF
+  set RL_C OFF
+  set RL_D OFF
+  set RL_E OFF
+  set RL_F OFF
+
+  welcome_tone
+
+  do forever
+    CLS
+
+    Print "AC_IN" 'Displaying NEPA reading on LCD
+    Locate 1,0
+    Print (ReadAD10(NEPA))
+    Print "V"
+
+    Locate 0,5
+    Print "|"
+    Locate 1,5
+    Print "|"
+
+    'To display AC OUT on LCD
+    Locate 0,6
+    Print "AC_OUT"
+    Locate 1,6
+    Print (ReadAD10(AC_OUT))
+    Print "V"
+
+    Locate 0,12
+    Print "|"
+    Locate 1,12
+    Print "|"
+
+    'To display LOAD on LCD
+    Locate 0,13
+    Print "PWR"
+    Locate 1,13
+    Print (ReadAD10(LOAD))
+    Print "W"
+
+    Wait 750 ms
+
+     if ReadAD10(NEPA) < 140 Then
+      PORTC = 0
+      CLS
+      Print "INPUT VOLTAGE"
+      Locate 1,0
+      Print "CRITICALLY LOW"
+      Wait 3 s
+      end if
+
+
+    if ReadAD10(NEPA) > 260 Then
+      PORTC = 0
+      CLS
+      Print "INPUT VOLTAGE"
+      Locate 1,0
+      Print "CRITICALLY HIGH"
+      Wait 3 s
+    end if
+
+    if ReadAD10(NEPA) > 139 & ReadAD10(NEPA) < 160  Then
+      PORTC = 48
+    end if
+
+    if ReadAD10(NEPA) > 159 & ReadAD10(NEPA) < 180  Then
+      PORTC = 40
+    end if
+
+    if ReadAD10(NEPA) > 179 & ReadAD10(NEPA) < 200  Then
+      PORTC = 36
+    end if
+
+    if ReadAD10(NEPA) > 199 & ReadAD10(NEPA) < 220  Then
+      PORTC = 34
+    end if
+
+    if ReadAD10(NEPA) > 219 & ReadAD10(NEPA) < 240  Then
+      PORTC = 33
+    end if
+
+    if ReadAD10(NEPA) > 239 & ReadAD10(NEPA) < 260  Then
+      PORTC = 32
+    end if
+
+    if ReadAD10(AC_OUT) > 253 Then
+      PORTC = 0
+      CLS
+      Print "OUTPUT VOLTAGE"
+      Locate 1,0
+      Print "CRITICALLY HIGH"
+      Wait 3 s
+    end if
+
+    if ReadAD10(LOAD) > 618 Then
+    do Forever
+    overload
+    loop
+    end if
+
+  loop
+
+
+
+  end
+  sub overload
+  PORTC = 0
+  CLS
+  Print "SYSTEM OVERLOAD"
+  Wait 3 s
+  CLS
+  Print "Reduce Load and"
+  Locate 1,0
+  Print "Restart System"
+  Wait 3 s
+  end sub
+
+  sub welcome_tone
+  tone 240, 25
+  wait 200 ms
+  tone 240, 25
+  wait 200 ms
+  tone 240, 25
+  wait 200 ms
+  tone 240, 25
+
+  end sub
